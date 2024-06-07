@@ -1,0 +1,362 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Kreator palet";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Kreator palet</title>
+    <link rel="icon" type="image/x-icon" href="~/favicon.ico" />
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+        h1 {
+            margin-bottom: 20px;
+        }
+        #colorWheelContainer {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        #chooseColourButton {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            color: white;
+            background-color: #007BFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease;
+        }
+        #chooseColourButton:hover {
+            background-color: #0056b3;
+        }
+        #colorDisplay {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .colorRow {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .colorBox {
+            width: 60px;
+            height: 60px;
+            border: 2px solid #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .description {
+            font-size: 14px;
+            font-weight: bold;
+            width: 150px;
+            text-align: right;
+        }
+        .hexCode {
+            margin-left: 10px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Kreator palet</h1>
+    <div id="colorWheelContainer"></div>
+    <button id="chooseColourButton">Wygeneruj paletę</button> <!-- Choose color -->
+    <div id="colorDisplay">
+        <div class="colorRow">
+            <div class="description">Kolor główny:</div> <!-- Main colour -->
+            <div class="colorBox" id="colorBoxMain"></div>
+            <div id="mainHex" class="hexCode"></div>
+        </div>
+        <div class="colorRow">
+            <div class="description">Kolor komplementarny:</div> <!-- Complementary colour -->
+            <div class="colorBox" id="colorBoxComplementary"></div>
+            <div id="complementaryHex" class="hexCode"></div>
+        </div>
+        <div class="colorRow">
+            <div class="description">Kolory analogiczne:</div> <!-- Analogous colours -->
+            <div class="colorBox" id="analogousBox1"></div>
+            <div class="colorBox" id="analogousBox2"></div>
+            <div id="analogousHex" class="hexCode"></div>
+        </div>
+        <div class="colorRow">
+            <div class="description">Triada kolorów:</div> <!-- Triadic colours -->
+            <div class="colorBox" id="triadicBox1"></div>
+            <div class="colorBox" id="triadicBox2"></div>
+            <div id="triadicHex" class="hexCode"></div>
+        </div>
+        <div class="colorRow">
+            <div class="description">Tetrada kolorów:</div> <!-- Tetradic colours -->
+            <div class="colorBox" id="tetradicBox1"></div>
+            <div class="colorBox" id="tetradicBox2"></div>
+            <div class="colorBox" id="tetradicBox3"></div>
+            <div id="tetradicHex" class="hexCode"></div>
+        </div>
+        <div class="colorRow">
+            <div class="description">Kolory monochromatyczne:</div> <!-- Monochromatic colours -->
+            <div class="colorBox" id="monochromaticBox1"></div>
+            <div class="colorBox" id="monochromaticBox2"></div>
+            <div class="colorBox" id="monochromaticBox3"></div>
+            <div id="monochromaticHex" class="hexCode"></div>
+        </div>
+        <footer>
+            © 2024 - Bartosz Naskręt
+        </footer>
+    </div>
+    <script>
+        function degreesToRadians(degrees) {
+            return degrees * (Math.PI / 180);
+        }
+
+        function generateColorWheel(size, centerColor) {
+            if (size === void 0) { size = 400; }
+            if (centerColor === void 0) { centerColor = "white"; }
+            var canvas = document.createElement("canvas");
+            var ctx = canvas.getContext("2d");
+            canvas.width = canvas.height = size;
+            var canvasClone = document.createElement("canvas");
+            canvasClone.width = canvasClone.height = size;
+            var canvasCloneCtx = canvasClone.getContext("2d");
+            var angle = 0;
+            var hexCode = [255, 0, 0];
+            var pivotPointer = 0;
+            var colorOffsetByDegree = 4.322;
+            while (angle++ < 360) {
+                var pivotPointerbefore = (pivotPointer + 3 - 1) % 3;
+                var pivotPointerAfter = (pivotPointer + 3 + 1) % 3;
+                if (hexCode[pivotPointer] < 255) {
+                    hexCode[pivotPointer] = (hexCode[pivotPointer] + colorOffsetByDegree > 255 ? 255 : hexCode[pivotPointer] + colorOffsetByDegree);
+                } else if (hexCode[pivotPointerbefore] > 0) {
+                    hexCode[pivotPointerbefore] = (hexCode[pivotPointerbefore] > colorOffsetByDegree ? hexCode[pivotPointerbefore] - colorOffsetByDegree : 0);
+                } else if (hexCode[pivotPointer] >= 255) {
+                    hexCode[pivotPointer] = 255;
+                    pivotPointer = (pivotPointer + 1) % 3;
+                }
+                canvasCloneCtx.clearRect(0, 0, size, size);
+                var grad = canvasCloneCtx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+                grad.addColorStop(0, centerColor);
+                grad.addColorStop(1, "rgb(" + hexCode.map(function (h) { return Math.floor(h); }).join(",") + ")");
+                canvasCloneCtx.fillStyle = grad;
+                canvasCloneCtx.globalCompositeOperation = "source-over";
+                canvasCloneCtx.beginPath();
+                canvasCloneCtx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+                canvasCloneCtx.closePath();
+                canvasCloneCtx.fill();
+                canvasCloneCtx.globalCompositeOperation = "destination-out";
+                canvasCloneCtx.beginPath();
+                canvasCloneCtx.arc(size / 2, size / 2, 0, degreesToRadians(angle + 1), degreesToRadians(angle + 1));
+                canvasCloneCtx.arc(size / 2, size / 2, size / 2 + 1, degreesToRadians(angle + 1), degreesToRadians(angle + 1));
+                canvasCloneCtx.arc(size / 2, size / 2, size / 2 + 1, degreesToRadians(angle + 1), degreesToRadians(angle - 1));
+                canvasCloneCtx.arc(size / 2, size / 2, 0, degreesToRadians(angle + 1), degreesToRadians(angle - 1));
+                canvasCloneCtx.closePath();
+                canvasCloneCtx.fill();
+                ctx.drawImage(canvasClone, 0, 0);
+            }
+            return canvas;
+        }
+
+        var colorWheelContainer = document.getElementById('colorWheelContainer');
+        var colorWheel = generateColorWheel(300);
+        colorWheelContainer.appendChild(colorWheel);
+
+        function colorWheelMouse(evt) {
+            var ctx = colorWheel.getContext("2d");
+            var data = ctx.getImageData(evt.offsetX, evt.offsetY, 1, 1).data;
+            p.innerHTML = "RGB: " + data.slice(0, 3).join(',');
+        }
+
+        function colorWheelClick(evt) {
+            var ctx = colorWheel.getContext("2d");
+            var data = ctx.getImageData(evt.offsetX, evt.offsetY, 1, 1).data;
+            const clickedColor = {
+                Red: data[0],
+                Green: data[1],
+                Blue: data[2]
+            };
+            sendJsonToApi('https://localhost:7019/api/colours', clickedColor);
+            displayColor(rgbToHex(data[0], data[1], data[2]));
+        }
+
+        colorWheel.onmousemove = colorWheelMouse;
+        colorWheel.onclick = colorWheelClick;
+
+        async function sendJsonToApi(url, data) {
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+                console.log('Success:', result);
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        function rgbToHex(r, g, b) {
+            return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase();
+        }
+
+        function displayColor(hexCode) {
+            document.getElementById('colorBoxMain').style.backgroundColor = hexCode;
+            document.getElementById('mainHex').textContent = hexCode;
+        }
+
+        document.getElementById('chooseColourButton').addEventListener('click', async () => {
+            try {
+                const response = await fetch('https://localhost:7019/api/hex-colours');
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        const errorData = await response.json();
+                        document.getElementById('mainHex').textContent = errorData.message;
+                    } else {
+                        document.getElementById('mainHex').textContent = 'An error occurred while fetching data.';
+                    }
+                } else {
+                    const data = await response.json();
+                    let receivedColour = JSON.stringify(data);
+                    displayColor(receivedColour.slice(1, -1));
+                }
+            } catch (error) {
+                document.getElementById('mainHex').innerText = 'Failed to fetch data.';
+            }
+        });
+
+        document.getElementById('chooseColourButton').addEventListener('click', async () => {
+            try {
+                const response = await fetch('https://localhost:7019/api/complementary-colours');
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        const errorData = await response.json();
+                        document.getElementById('complementaryHex').textContent = errorData.message;
+                    } else {
+                        document.getElementById('complementaryHex').textContent = 'An error occurred while fetching data.';
+                    }
+                } else {
+                    const data = await response.json();
+                    let receivedColour = JSON.stringify(data);
+                    document.getElementById('colorBoxComplementary').style.backgroundColor = receivedColour.slice(1, -1);
+                    document.getElementById('complementaryHex').textContent = receivedColour.slice(1, -1);
+                }
+            } catch (error) {
+                document.getElementById('complementaryHex').innerText = 'Failed to fetch data.';
+            }
+        });
+
+        document.getElementById('chooseColourButton').addEventListener('click', async () => {
+            try {
+                const response = await fetch('https://localhost:7019/api/analogous-colours');
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        const errorData = await response.json();
+                        document.getElementById('analogousHex').textContent = errorData.message;
+                    } else {
+                        document.getElementById('analogousHex').textContent = 'An error occurred while fetching data.';
+                    }
+                } else {
+                    const data = await response.json();
+                    let receivedColour = JSON.stringify(data);
+                    document.getElementById('analogousBox1').style.backgroundColor = receivedColour.slice(2, -12);
+                    document.getElementById('analogousBox2').style.backgroundColor = receivedColour.slice(12, -2);
+                    document.getElementById('analogousHex').textContent = ((receivedColour.replace(/"/g, '')).replace(',', ', ')).slice(1, -1);
+                }
+            } catch (error) {
+                document.getElementById('analogousHex').innerText = 'Failed to fetch data.';
+            }
+        });
+
+        document.getElementById('chooseColourButton').addEventListener('click', async () => {
+            try {
+                const response = await fetch('https://localhost:7019/api/triadic-colours');
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        const errorData = await response.json();
+                        document.getElementById('triadicHex').textContent = errorData.message;
+                    } else {
+                        document.getElementById('triadicHex').textContent = 'An error occurred while fetching data.';
+                    }
+                } else {
+                    const data = await response.json();
+                    let receivedColour = JSON.stringify(data);
+                    document.getElementById('triadicBox1').style.backgroundColor = receivedColour.slice(2, -12);
+                    document.getElementById('triadicBox2').style.backgroundColor = receivedColour.slice(12, -2);
+                    document.getElementById('triadicHex').textContent = ((receivedColour.replace(/"/g, '')).replace(',', ', ')).slice(1, -1);
+                }
+            } catch (error) {
+                document.getElementById('triadicHex').innerText = 'Failed to fetch data.';
+            }
+        });
+
+        document.getElementById('chooseColourButton').addEventListener('click', async () => {
+            try {
+                const response = await fetch('https://localhost:7019/api/tetradic-colours');
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        const errorData = await response.json();
+                        document.getElementById('tetradicHex').textContent = errorData.message;
+                    } else {
+                        document.getElementById('tetradicHex').textContent = 'An error occurred while fetching data.';
+                    }
+                } else {
+                    const data = await response.json();
+                    let receivedColour = JSON.stringify(data);
+                    document.getElementById('tetradicBox1').style.backgroundColor = receivedColour.slice(2, -22);
+                    document.getElementById('tetradicBox2').style.backgroundColor = receivedColour.slice(12, -12);
+                    document.getElementById('tetradicBox3').style.backgroundColor = receivedColour.slice(22, -2);
+                    document.getElementById('tetradicHex').textContent = ((receivedColour.replace(/"/g, '')).replaceAll(',', ', ')).slice(1, -1);;
+                }
+            } catch (error) {
+                document.getElementById('tetradicHex').innerText = 'Failed to fetch data.';
+            }
+        });
+
+        document.getElementById('chooseColourButton').addEventListener('click', async () => {
+            try {
+                const response = await fetch('https://localhost:7019/api/monochromatic-colours');
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        const errorData = await response.json();
+                        document.getElementById('monochromaticHex').textContent = errorData.message;
+                    } else {
+                        document.getElementById('monochromaticHex').textContent = 'An error occurred while fetching data.';
+                    }
+                } else {
+                    const data = await response.json();
+                    let receivedColour = JSON.stringify(data);
+                    document.getElementById('monochromaticBox1').style.backgroundColor = receivedColour.slice(2, -22);
+                    document.getElementById('monochromaticBox2').style.backgroundColor = receivedColour.slice(12, -12);
+                    document.getElementById('monochromaticBox3').style.backgroundColor = receivedColour.slice(22, -2);
+                    document.getElementById('monochromaticHex').textContent = ((receivedColour.replace(/"/g, '')).replaceAll(',', ', ')).slice(1, -1);;
+                }
+            } catch (error) {
+                document.getElementById('monochromaticHex').innerText = 'Failed to fetch data.';
+            }
+        });
+    </script>
+</body>
+</html>
